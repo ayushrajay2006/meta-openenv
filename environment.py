@@ -258,7 +258,7 @@ class CleanEnv:
 
     def _compute_score(self, rows: list[RowData], expected_rows: list[RowData]) -> float:
         if not expected_rows:
-            return 1.0
+            return 0.99
 
         matched_current: set[int] = set()
         total = 0.0
@@ -278,7 +278,7 @@ class CleanEnv:
 
         structure_penalty = 0.05 * abs(len(rows) - len(expected_rows))
         normalized = (total / len(expected_rows)) - structure_penalty
-        return round(max(0.0, min(1.0, normalized)), 4)
+        return round(max(0.0, min(0.99, normalized)), 4)
 
     def _row_similarity(self, current: RowData, expected: RowData) -> float:
         checks = [

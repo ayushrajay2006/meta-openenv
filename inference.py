@@ -144,7 +144,7 @@ def run_task(task: str, client: OpenAI | None) -> float:
             )
             if done:
                 break
-        success = final_score >= 1.0
+        success = final_score >= 0.99
     finally:
         log_end(success=success, steps=steps_taken, score=final_score, rewards=rewards)
 

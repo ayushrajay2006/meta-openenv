@@ -152,11 +152,11 @@ The script:
 
 The deterministic heuristic policy reaches:
 
-- `easy`: `1.0`
-- `medium`: `1.0`
-- `hard`: `1.0`
+- `easy`: `0.99`
+- `medium`: `0.99`
+- `hard`: `0.99`
 
-Mean score: `1.0`
+Mean score: `0.99`
 
 For submission, use a fixed model with `temperature=0` to maximize reproducibility.
 
@@ -192,10 +192,10 @@ Verified live endpoints:
 
 Verified against the deployed Hugging Face Space using `ENV_BASE_URL=https://champion2006-openenv-data-cleaning.hf.space`:
 
-- `easy`: `1.0`
-- `medium`: `1.0`
-- `hard`: `1.0`
-- mean score: `1.0`
+- `easy`: `0.99`
+- `medium`: `0.99`
+- `hard`: `0.99`
+- mean score: `0.99`
 
 ## Files
 
