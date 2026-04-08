@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel
 
 from environment import CleanEnv
@@ -36,9 +36,9 @@ def root() -> dict:
 
 
 @app.post("/reset", response_model=dict)
-def reset(req: ResetRequest) -> dict:
+def reset(req: ResetRequest | None = Body(default=None)) -> dict:
     try:
-        observation = env.reset(req.task)
+        observation = env.reset(req.task if req else "easy")
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return {"observation": observation.model_dump()}
