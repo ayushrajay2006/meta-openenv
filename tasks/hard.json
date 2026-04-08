@@ -1,0 +1,40 @@
+{
+  "task_id": "hard",
+  "difficulty": "hard",
+  "instruction": "Prepare this messy CRM export for downstream analytics by standardizing names, converting age strings, filling missing ages with 0, removing invalid rows, and removing duplicates while preserving useful extra metadata.",
+  "max_steps": 6,
+  "initial_data": [
+    {
+      "name": "john",
+      "age": "25",
+      "extra": "vip"
+    },
+    {
+      "name": "John",
+      "age": "25",
+      "extra": "vip"
+    },
+    {
+      "name": "  alice ",
+      "age": null,
+      "extra": "new"
+    },
+    {
+      "name": null,
+      "age": null,
+      "extra": "noise"
+    }
+  ],
+  "expected_data": [
+    {
+      "name": "John",
+      "age": 25,
+      "extra": "vip"
+    },
+    {
+      "name": "Alice",
+      "age": 0,
+      "extra": "new"
+    }
+  ]
+}

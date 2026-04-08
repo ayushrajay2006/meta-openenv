@@ -1,0 +1,22 @@
+{
+  "task_id": "easy",
+  "difficulty": "easy",
+  "instruction": "Clean the customer list by removing duplicate rows and filling missing age values with 0.",
+  "max_steps": 4,
+  "initial_data": [
+    {
+      "name": "John",
+      "age": null
+    },
+    {
+      "name": "John",
+      "age": null
+    }
+  ],
+  "expected_data": [
+    {
+      "name": "John",
+      "age": 0
+    }
+  ]
+}

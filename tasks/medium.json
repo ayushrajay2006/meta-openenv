@@ -1,0 +1,30 @@
+{
+  "task_id": "medium",
+  "difficulty": "medium",
+  "instruction": "Standardize names to title case, convert numeric age strings to integers, fill missing ages with 0, and remove duplicates.",
+  "max_steps": 5,
+  "initial_data": [
+    {
+      "name": "john",
+      "age": "25"
+    },
+    {
+      "name": "John",
+      "age": "25"
+    },
+    {
+      "name": "ALICE",
+      "age": null
+    }
+  ],
+  "expected_data": [
+    {
+      "name": "John",
+      "age": 25
+    },
+    {
+      "name": "Alice",
+      "age": 0
+    }
+  ]
+}

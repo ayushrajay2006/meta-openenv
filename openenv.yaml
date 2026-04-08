@@ -1,0 +1,43 @@
+name: openenv-data-cleaning
+version: 1.0.0
+description: OpenEnv environment for real-world tabular data cleaning and remediation.
+domain: data-cleaning
+tags:
+  - openenv
+  - fastapi
+  - data-quality
+  - tabular-cleaning
+entrypoint:
+  framework: fastapi
+  app: app:app
+  host: 0.0.0.0
+  port: 7860
+api:
+  reset:
+    path: /reset
+    method: POST
+  step:
+    path: /step
+    method: POST
+  state:
+    path: /state
+    method: GET
+spec:
+  observation_model: models.Observation
+  action_model: models.Action
+  reward_model: models.Reward
+tasks:
+  - id: easy
+    difficulty: easy
+    description: Remove duplicates and fill missing ages.
+  - id: medium
+    difficulty: medium
+    description: Standardize names, cast ages, fill missing ages, and remove duplicates.
+  - id: hard
+    difficulty: hard
+    description: Full CRM-export cleanup with invalid row removal and metadata preservation.
+baseline:
+  script: inference.py
+deployment:
+  platform: huggingface-spaces
+  sdk: docker
