@@ -9,11 +9,12 @@ from openai import OpenAI
 
 
 ENV_BASE_URL = os.getenv("ENV_BASE_URL", "http://127.0.0.1:7860")
-API_BASE_URL = os.getenv("API_BASE_URL")
-MODEL_NAME = os.getenv("MODEL_NAME")
-HF_TOKEN = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+HF_TOKEN = os.getenv("HF_TOKEN")
 MAX_STEPS = 6
 TASKS = ["easy", "medium", "hard"]
+BENCHMARK = "openenv-data-cleaning"
 
 
 SYSTEM_PROMPT = """You are controlling a data-cleaning environment.
@@ -25,12 +26,29 @@ Set column and fill_value to null when not needed.
 Do not include markdown fences or extra text."""
 
 
-def log(tag: str, payload: dict[str, Any]) -> None:
-    print(f"[{tag}] {json.dumps(payload, sort_keys=True)}", flush=True)
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error: str | None) -> None:
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} "
+        f"done={str(done).lower()} error={error if error else 'null'}",
+        flush=True,
+    )
+
+
+def log_end(success: bool, steps: int, score: float, rewards: list[float]) -> None:
+    rewards_str = ",".join(f"{reward:.2f}" for reward in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} "
+        f"score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
 
 
 def build_client() -> OpenAI | None:
-    if not API_BASE_URL or not MODEL_NAME or not HF_TOKEN:
+    if not HF_TOKEN:
         return None
     return OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
@@ -92,48 +110,51 @@ def choose_action_heuristic(observation: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_task(task: str, client: OpenAI | None) -> float:
-    observation = reset_task(task)
-    log(
-        "START",
-        {
-            "task": task,
-            "difficulty": observation["difficulty"],
-            "instruction": observation["instruction"],
-            "planner": "model" if client else "heuristic",
-        },
-    )
-
+    observation: dict[str, Any] | None = None
     final_score = 0.0
-    for step_index in range(1, MAX_STEPS + 1):
-        action = choose_action_with_model(client, observation) if client else choose_action_heuristic(observation)
-        result = step_task(action)
-        observation = result["observation"]
-        reward = result["reward"]
-        info = result["info"]
-        final_score = info["grader_score"]
-        log(
-            "STEP",
-            {
-                "task": task,
-                "step": step_index,
-                "action": action,
-                "reward": reward["value"],
-                "score": final_score,
-                "done": result["done"],
-            },
-        )
-        if result["done"]:
-            break
+    rewards: list[float] = []
+    steps_taken = 0
+    success = False
 
-    log("END", {"task": task, "final_score": final_score})
+    log_start(task=task, env=BENCHMARK, model=MODEL_NAME)
+
+    try:
+        observation = reset_task(task)
+        for step_index in range(1, MAX_STEPS + 1):
+            action = (
+                choose_action_with_model(client, observation)
+                if client
+                else choose_action_heuristic(observation)
+            )
+            result = step_task(action)
+            observation = result["observation"]
+            reward_value = float(result["reward"]["value"])
+            final_score = float(result["info"]["grader_score"])
+            done = bool(result["done"])
+            error_value = result["info"].get("last_action_error")
+            rewards.append(reward_value)
+            steps_taken = step_index
+            action_str = json.dumps(action, sort_keys=True, separators=(",", ":"))
+            log_step(
+                step=step_index,
+                action=action_str,
+                reward=reward_value,
+                done=done,
+                error=error_value,
+            )
+            if done:
+                break
+        success = final_score >= 1.0
+    finally:
+        log_end(success=success, steps=steps_taken, score=final_score, rewards=rewards)
+
     return final_score
 
 
 def main() -> None:
     client = build_client()
-    scores = {task: run_task(task, client) for task in TASKS}
-    mean_score = round(sum(scores.values()) / len(scores), 4)
-    print(json.dumps({"scores": scores, "mean_score": mean_score}, sort_keys=True))
+    for task in TASKS:
+        run_task(task, client)
 
 
 if __name__ == "__main__":
